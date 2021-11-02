@@ -1,0 +1,11 @@
+input_dir: /home/zijiejiang/Documents/dataset/d_xxxx_q_xxxx
+db_range:
+  - 1605665633709718249
+  - 1605665688600292370
+query_range:
+  - 1608771020274660171
+  - 1608771079569083400
+origin:
+  - 65066.81680232
+  - 664.20524287
+  - 722.38443336

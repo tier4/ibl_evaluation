@@ -4,15 +4,12 @@ import transformations
 import yaml
 import pandas as pd
 import argparse
-import shutil
 
 from se3 import interpolate_SE3
 
 
-# T_repair = transformations.quaternion_matrix([0.5, 0.5, -0.5, 0.5])
-
-# from optical to cam0
-T_cam0_optical = transformations.quaternion_matrix([0.5, -0.5, 0.5, -0.5])
+# from optical0 to cam0
+T_cam0_optical0 = transformations.quaternion_matrix([0.5, -0.5, 0.5, -0.5])
 # from cam0 to sensor
 T_sensor_cam0 = transformations.quaternion_matrix([0.9997767826301288, -0.005019424387927419, 0.0008972848758006599, 0.020503296623082125])
 # from sensor to base
@@ -21,8 +18,7 @@ T_base_sensor = transformations.quaternion_matrix([0.9995149287258687, -0.000294
 T_sensor_cam0[0:3, 3] = np.array([0.215, 0.031, -0.024])
 T_base_sensor[0:3, 3] = np.array([0.6895, 0.0, 2.1])
 
-T_cam0_base = np.linalg.inv(T_cam0_optical).dot(np.linalg.inv(T_sensor_cam0).dot(np.linalg.inv(T_base_sensor)))
-T_base_cam0 = np.linalg.inv(T_cam0_base)
+T_base_optical0 = T_base_sensor.dot(T_sensor_cam0.dot(T_cam0_optical0))
 
 
 class Frame():
@@ -39,11 +35,11 @@ def find_timestamps_in_between(timestamp, timestamps_to_search):
     index = 0
     while timestamps_to_search[index] <= timestamp:
         index += 1
+    
     return index - 1, index
 
 
 def interpolate(pose_i, pose_j, alpha):
-    # pose
     pose_k = interpolate_SE3(pose_i, pose_j, alpha)
 
     return pose_k
@@ -127,7 +123,7 @@ def preprocess_tier4(seq_dir, output_dir, cam_subset_range):
         t_j = ndt_timestamps[idx_j]
         alpha = (image_timestamp - t_i) / (t_j - t_i)
         image_pose = interpolate_SE3(ndt_poses[idx_i], ndt_poses[idx_j], alpha)
-        image_pose = image_pose.dot(T_base_cam0)
+        image_pose = image_pose.dot(T_base_optical0)
         image_path = image_paths[idx]
 
         frame = Frame(image_path, image_pose)
@@ -148,6 +144,9 @@ def preprocess_tier4(seq_dir, output_dir, cam_subset_range):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input_dir', required=True)
+    parser.add_argument('-o', '--output_dir', required=True)
+    parser.add_argument('--start', required=True)
+    parser.add_argument('--end', required=True)
     parser.add_argument('--mode', required=True, choices=['database', 'query'])
     args = parser.parse_args()
     return args
@@ -158,7 +157,7 @@ def main():
 
     seq_dir = args.input_dir
     mode = args.mode
-    output_dir = os.path.join('.', 'data', mode)
+    output_dir = os.path.join(args.output_dir, mode)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
