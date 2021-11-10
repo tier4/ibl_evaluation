@@ -1,51 +1,7 @@
+# ROS Toolbox
 
-workspace/
-    raw/
-        database/
-            image/
-                1605665221206850661.jpg
-                ...
-            pose.txt
+This repository provides the toolbox for tier4 rosbag decompression, IBL preprocessing and IBL evaluation.
 
-        query/
-            image/
-                1608770608960776203.jpg
-                ...
-            pose.txt
+# Dependency
 
-    processed/
-        database/
-            1605665633709718249.jpg
-            ...
-        query/
-            1605665688600292370.jpg
-            ...
-        output/
-            db_global.hdf5
-            query_global.hdf5
-            feats-superpoint-n4096-r1024.h5
-            feats-superpoint-n4096-r1024_matches-superglue_pairs-db.h5
-            feats-superpoint-n4096-r1024_matches-superglue_pairs-query-openibl5.h5
-            results.txt
-            results.txt_logs.pkl
-            pair/
-                pairs-db.txt
-                pairs-db-slim.txt
-                pairs-query-openibl5.txt
-            sfm_colmap/
-                cameras.bin
-                images.bin
-                points3D.bin
-            sfm_empty/
-                cameras.bin
-                images.bin
-                points3D.bin
-            sfm_reference/
-                database.db
-                model/
-                    cameras.bin
-                    images.bin
-                    points3D.bin
-        evaluation/
-            translational_error.png
-            rotational_error.png
+- See requirements.txt

@@ -1,0 +1,5 @@
+input_dir: '/home/zijiejiang/Documents/dataset/d_xxxx_q_xxxx/raw/rosbag/12_24'
+output_dir: '/home/zijiejiang/Documents/dataset/d_xxxx_q_xxxx/raw/rosbag/decompress_test2'
+prefix: 'da46daf9-ad82-4f49-8efe-5330147cd07f_1608770608_2020-12-24'
+topic: '/sensing/camera/traffic_light/left/image_raw/compressed'
+is_BGR: True
