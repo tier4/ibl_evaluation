@@ -261,23 +261,22 @@ class Plotter:
             labels_txt = [None] * len(plots)
         else:
             labels_txt = labels
-        
         assert (len(plots) == len(labels_txt))
 
         plt.clf()
-        
-        for i in range(0, len(plt.plot)):
+        for i in range(0, len(plots)):
             args = {
                 'label': labels_txt[i]
             }
             if colors:
                 args['color'] = colors[i]
-            
             plt.plot(*plots[i], linewidth=1, **args)
         
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
-        
+        if title:
+            plt.title(title)
+
         if equal_axes:
             plt.axis('equal')
         
@@ -285,7 +284,6 @@ class Plotter:
             plt.legend()
         
         plt.grid()
-        
         if filename is None:
             filename = '%02d_%s.png' % (self.count, '_'.join(title.lower().split()))
         
