@@ -55,8 +55,8 @@ def main():
 
     T_sensor_cam = transformations.quaternion_matrix(config_dict.T_sensor_cam[:4])
     T_sensor_cam[:3, 3] = config_dict.T_sensor_cam[4:]
-    cam_conf = [1]
-    cam_conf = tuple(cam_conf.extend(config_dict.cam_conf))
+    cam_conf = [1].extend(config_dict.cam_conf)
+    cam_conf = tuple(cam_conf)
     
     # 2. convert NDT poses to image poses, align timestamps, copy images, etc.
     db_processor = NDT2Image(os.path.join(raw_dir, 'database'),
