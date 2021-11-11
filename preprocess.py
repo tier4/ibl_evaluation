@@ -1,6 +1,7 @@
 import os
 import argparse
 import numpy as np
+import transformations
 
 from utils import create_dir_if_not_exist, NDT2Image, load_yaml, Reconstructor
 
@@ -50,22 +51,28 @@ def main():
     create_dir_if_not_exist(processed_query_img_dir)
     create_dir_if_not_exist(output_dir)
     create_dir_if_not_exist(evaluation_dir)
+
+    T_sensor_cam = transformations.quaternion_matrix(config_dict.T_sensor_cam[:4])
+    T_sensor_cam[:3, 3] = config_dict.T_sensor_cam[4:]
+    cam_conf = [1]
+    cam_conf = tuple(cam_conf.extend(config_dict.cam_conf))
     
     # 2. convert NDT poses to image poses, align timestamps, copy images, etc.
     db_processor = NDT2Image(os.path.join(raw_dir, 'database'),
                              processed_db_dir,
-                             config_dict['db_range'])
+                             config_dict['db_range'], T_sensor_cam)
     db_processor.process()
     
     query_processeor = NDT2Image(os.path.join(raw_dir, 'query'),
                                  processed_query_dir,
-                                 config_dict['query_range'])
+                                 config_dict['query_range'], T_sensor_cam)
     query_processeor.process()
 
     # 3. perform 3D reconstruction (generate sfm_colmap and sfm_empty)
     reconstructor = Reconstructor(processed_db_dir,
                                   output_dir,
-                                  np.array(config_dict['origin']))
+                                  np.array(config_dict['origin']),
+                                  cam_conf)
     reconstructor.generate_sfm_empty()
     reconstructor.generate_sfm_colmap()
 

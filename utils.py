@@ -17,7 +17,7 @@ class NDT2Image:
             self.img_name = img_name
             self.img_pose = img_pose
 
-    def __init__(self, input_dir, output_dir, scope, img_ext='.jpg'):
+    def __init__(self, input_dir, output_dir, scope, T_sensor_cam, img_ext='.jpg'):
         self.input_dir = input_dir
         self.input_img_dir = os.path.join(input_dir, 'image')
         self.ndt_pose_file = os.path.join(input_dir, 'pose.txt')
@@ -34,14 +34,14 @@ class NDT2Image:
         self.start_idx = input_img_names.index(start_img)
         self.end_idx = input_img_names.index(end_img)
         self.input_img_names = input_img_names[self.start_idx: self.end_idx+1]
-    
-        T_cam0_optical0 = transformations.quaternion_matrix([0.5, -0.5, 0.5, -0.5])
-        T_sensor_cam0 = transformations.quaternion_matrix([0.9997767826301288, -0.005019424387927419, 0.0008972848758006599, 0.020503296623082125])
+
+        T_cam_optical = transformations.quaternion_matrix([0.5, -0.5, 0.5, -0.5])
+        # T_sensor_cam = transformations.quaternion_matrix([0.9997767826301288, -0.005019424387927419, 0.0008972848758006599, 0.020503296623082125])
         T_base_sensor = transformations.quaternion_matrix([0.9995149287258687, -0.00029495229864108036, -0.009995482472228997, -0.029494246683224673])
-        T_sensor_cam0[0:3, 3] = np.array([0.215, 0.031, -0.024])
+        # T_sensor_cam[0:3, 3] = np.array([0.215, 0.031, -0.024])
         T_base_sensor[0:3, 3] = np.array([0.6895, 0.0, 2.1])
 
-        self.T_base_optical0 = T_base_sensor.dot(T_sensor_cam0.dot(T_cam0_optical0))
+        self.T_base_optical = T_base_sensor.dot(T_sensor_cam.dot(T_cam_optical))
 
     def name2ts(self, name):
         return int(name.split('.')[0])
@@ -116,7 +116,7 @@ class NDT2Image:
             t_j = ndt_tss[idx_j]
             alpha = (img_ts - t_i) / (t_j - t_i)
             img_pose = interpolate_SE3(ndt_poses[idx_i], ndt_poses[idx_j], alpha)
-            img_pose = img_pose.dot(self.T_base_optical0)
+            img_pose = img_pose.dot(self.T_base_optical)
             img_name = img_names[idx]
 
             frame = self.Frame(img_name, img_pose)
@@ -140,7 +140,7 @@ class NDT2Image:
 
 
 class Reconstructor:
-    def __init__(self, db_dir, output_dir, origin):
+    def __init__(self, db_dir, output_dir, origin, cam_conf):
         self.db_dir = db_dir
         self.db_img_dir = os.path.join(db_dir, 'image')
         self.img_pose_file = os.path.join(db_dir, 'pose.pickle')
@@ -152,6 +152,7 @@ class Reconstructor:
         create_dir_if_not_exist(self.sfm_empty_dir)
 
         self.origin = origin
+        self.cam_conf = cam_conf
 
     def shift_origin(self, poses, origin):
         for idx in range(len(poses)):
@@ -192,8 +193,9 @@ class Reconstructor:
             f.write('#   CAMERA_ID, MODEL, WIDTH, HEIGHT, PARAMS[]\n')
             f.write('# Number of cameras: 1\n')
 
-            line = '%d %s %d %d %f %f %f %f %f %f %f %f\n' % \
-                (1, 'OPENCV', 1440, 1080, 1039.13693, 1038.90465, 720.19014, 553.13684, -0.117387, 0.087465, 4.8e-5, 0.000289)
+            # line = '%d %s %d %d %f %f %f %f %f %f %f %f\n' % \
+            #     (1, 'OPENCV', 1440, 1080, 1039.13693, 1038.90465, 720.19014, 553.13684, -0.117387, 0.087465, 4.8e-5, 0.000289)
+            line = '%d %s %d %d %f %f %f %f %f %f %f %f\n' % self.cam_conf
             f.write(line)
 
     def generate_sfm_empty(self):
