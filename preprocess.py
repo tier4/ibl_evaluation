@@ -2,6 +2,7 @@ import os
 import argparse
 import numpy as np
 import transformations
+from easydict import EasyDict as edict
 
 from utils import create_dir_if_not_exist, NDT2Image, load_yaml, Reconstructor
 
@@ -20,7 +21,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    config_dict = load_yaml(args.config)
+    config_dict = edict(load_yaml(args.config))
     input_dir = config_dict['input_dir']
 
     # 1. check and create directories
