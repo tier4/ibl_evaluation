@@ -221,11 +221,13 @@ class Reconstructor:
 
         print('Running feature_extractor...')
         timer = time.time()
+        print('cam param:')
+        print(self.cam_conf[4:])
         command = 'colmap feature_extractor --database_path %s  --image_path %s --ImageReader.camera_model %s --ImageReader.camera_params %s' \
                   % (os.path.join(self.sfm_colmap_dir, 'database.db'),
                      self.db_img_dir,
                      'OPENCV',
-                     ','.join(list(map(str, [1039.13693,1038.90465,720.19014,553.13684,-0.117387,0.087465,4.8e-5,0.000289]))))
+                     ','.join(list(map(str, self.cam_conf[4:]))))
         subprocess.call(command, shell=True, stdout=open(os.devnull, 'w'))
         print('Cost %.2f s.' % (time.time() - timer))
 
