@@ -243,16 +243,16 @@ class Reconstructor:
         subprocess.call(command, shell=True, stdout=open(os.devnull, 'w'))
         print('Cost %.2f s.' % (time.time() - timer))
 
-        print('Running mapper ...')
-        timer = time.time()
-        command = 'colmap mapper --database_path %s \
-                   --image_path %s \
-                   --output_path %s' \
-                  % (os.path.join(self.sfm_colmap_dir, 'database.db'),
-                     self.db_img_dir,
-                     self.sfm_colmap_dir)
-        subprocess.call(command, shell=True, stdout=open(os.devnull, 'w'))
-        print('Cost %.2f s.' % (time.time() - timer))
+        # print('Running mapper ...')
+        # timer = time.time()
+        # command = 'colmap mapper --database_path %s \
+        #            --image_path %s \
+        #            --output_path %s' \
+        #           % (os.path.join(self.sfm_colmap_dir, 'database.db'),
+        #              self.db_img_dir,
+        #              self.sfm_colmap_dir)
+        # subprocess.call(command, shell=True, stdout=open(os.devnull, 'w'))
+        # print('Cost %.2f s.' % (time.time() - timer))
 
 
 class Plotter:
