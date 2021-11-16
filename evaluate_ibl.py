@@ -25,7 +25,7 @@ def translation_error(pose_error):
     dy = pose_error[1, 3]
     dz = pose_error[2, 3]
     trans_error = np.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
-    return trans_error
+    return trans_error, dx, dy, dz
 
 
 def load_pose_txt(path, inverse=False):
@@ -102,7 +102,7 @@ def main():
     for img_name, result_pose in result_dict.items():
         query_pose = query_dict[img_name]
         pose_error = np.linalg.inv(result_pose).dot(query_pose)
-        t_errs.append(translation_error(pose_error))
+        t_errs.append(translation_error(pose_error)[0])
         r_errs.append(rotation_error(pose_error))
 
     t_errs = np.array(t_errs)
