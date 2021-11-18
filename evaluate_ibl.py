@@ -11,6 +11,17 @@ from utils import load_yaml, Plotter, create_dir_if_not_exist
 file_dir = os.path.dirname(os.path.abspath(__file__))
 
 
+def plot_evaluation(plotter, errs, interval, xlabel, ylabel, title, min_err=None, max_err=None):
+    counter = []
+    min_thresh = min_err if min_err else 0
+    max_thresh = max_err if max_err else np.max(errs)
+    thresh_list = np.linspace(min_thresh, max_thresh, interval)
+    for thresh in thresh_list:
+        counter.append(np.sum(errs < thresh) / len(errs))
+    
+    plotter.plot(([thresh_list, counter],), xlabel, ylabel, title)
+
+
 def rotation_error(pose_error):
     a = pose_error[0, 0]
     b = pose_error[1, 1]
@@ -21,9 +32,9 @@ def rotation_error(pose_error):
 
 
 def translation_error(pose_error):
-    dx = pose_error[0, 3]
-    dy = pose_error[1, 3]
-    dz = pose_error[2, 3]
+    dx = np.abs(pose_error[0, 3])
+    dy = np.abs(pose_error[1, 3])
+    dz = np.abs(pose_error[2, 3])
     trans_error = np.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
     return trans_error, dx, dy, dz
 
@@ -99,38 +110,33 @@ def main():
     
     t_errs = []
     r_errs = []
+    xt_errs = []
+    yt_errs = []
+    zt_errs = []
     for img_name, result_pose in result_dict.items():
         query_pose = query_dict[img_name]
         pose_error = np.linalg.inv(result_pose).dot(query_pose)
         t_errs.append(translation_error(pose_error)[0])
+        xt_errs.append(translation_error(pose_error)[1])
+        yt_errs.append(translation_error(pose_error)[2])
+        zt_errs.append(translation_error(pose_error)[3])
         r_errs.append(rotation_error(pose_error))
 
     t_errs = np.array(t_errs)
+    xt_errs = np.array(xt_errs)
+    yt_errs = np.array(yt_errs)
+    zt_errs = np.array(zt_errs)
     r_errs = np.array(r_errs)
 
     interval = 20
     # plot translational error
-    t_counter = []
-    t_min_thresh = 0
-    # t_max_thresh = np.max(t_errs)
-    t_max_thresh = 1
-    t_thresh_list = np.linspace(t_min_thresh, t_max_thresh, interval)
-    for thresh in t_thresh_list:
-        t_counter.append(np.sum(t_errs < thresh) / len(t_errs))
-
-    plotter.plot(([t_thresh_list, t_counter],), 'Distance threshold [meters]',
-                 'Correctly localized queries [%]', 'Translational Error')    
+    plot_evaluation(plotter, t_errs, interval, 'Distance threshold [meters]', 'Correctly localized queries [%]', 'Translational Error', max_err=1)
+    plot_evaluation(plotter, xt_errs, interval, 'Distance threshold [meters]', 'Correctly localized queries [%]', 'X-Axis Translational Error', max_err=1)
+    plot_evaluation(plotter, yt_errs, interval, 'Distance threshold [meters]', 'Correctly localized queries [%]', 'Y-Axis Translational Error', max_err=1)
+    plot_evaluation(plotter, zt_errs, interval, 'Distance threshold [meters]', 'Correctly localized queries [%]', 'Z-Axis Translational Error', max_err=1)
 
     # plot rotational error
-    r_counter = []
-    r_min_thresh = 0
-    r_max_thresh = np.max(r_errs)
-    r_thresh_list = np.linspace(r_min_thresh, r_max_thresh, interval)
-    for thresh in r_thresh_list:
-        r_counter.append(np.sum(r_errs < thresh) / len(r_errs))
-    
-    plotter.plot(([r_thresh_list, r_counter],), 'Angle threshold [rad]',
-                 'Correctly localized queries [%]', 'Rotational Error')
+    plot_evaluation(plotter, r_errs, interval, 'Angle threshold [rad]', 'Correctly localized queries [%]', 'Rotational Error')
 
 
 if __name__ == '__main__':
