@@ -120,7 +120,7 @@ def main():
         xt_errs.append(translation_error(pose_error)[1])
         yt_errs.append(translation_error(pose_error)[2])
         zt_errs.append(translation_error(pose_error)[3])
-        r_errs.append(rotation_error(pose_error))
+        r_errs.append(rotation_error(pose_error) * 180 / np.pi)
 
     t_errs = np.array(t_errs)
     xt_errs = np.array(xt_errs)
@@ -136,7 +136,7 @@ def main():
     plot_evaluation(plotter, zt_errs, interval, 'Distance threshold [meters]', 'Correctly localized queries [%]', 'Z-Axis Translational Error', max_err=1)
 
     # plot rotational error
-    plot_evaluation(plotter, r_errs, interval, 'Angle threshold [rad]', 'Correctly localized queries [%]', 'Rotational Error')
+    plot_evaluation(plotter, r_errs, interval, 'Angle threshold [deg]', 'Correctly localized queries [%]', 'Rotational Error')
 
 
 if __name__ == '__main__':
