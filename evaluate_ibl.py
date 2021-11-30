@@ -2,9 +2,12 @@ import os
 from pathlib import Path
 import argparse
 from easydict import EasyDict as edict
+import collections
 import numpy as np
 import transformations
 import pandas as pd
+import pickle
+import matplotlib.pyplot as plt
 
 from utils import load_yaml, Plotter, create_dir_if_not_exist
 
@@ -37,6 +40,15 @@ def translation_error(pose_error):
     dz = np.abs(pose_error[2, 3])
     trans_error = np.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
     return trans_error, dx, dy, dz
+
+
+def get_inlier_percentage(result_log_dict, qname):
+    qname = 'query/image/' + qname
+
+    num_matches = result_log_dict['loc'][qname]['num_matches']
+    num_inliers = result_log_dict['loc'][qname]['PnP_ret']['num_inliers']
+
+    return num_inliers / num_matches
 
 
 def load_pose_txt(path, inverse=False):
@@ -98,10 +110,15 @@ def main():
     plotter = Plotter(evaluation_dir)
 
     result_path = processed_dir / 'output' / 'result.txt'
+    result_log_path = processed_dir / 'output' / 'result_log.pkl'
     query_pose_path = processed_dir / 'query' / 'pose.pickle'
 
     result_dict = load_pose_txt(result_path, inverse=True)
+    result_log_dict = pickle.load(open(result_log_path, 'rb'))
     query_dict = load_pose_pickle(query_pose_path)
+
+    result_dict = collections.OrderedDict(sorted(result_dict.items()))
+    query_dict = collections.OrderedDict(sorted(query_dict.items()))
     shift_origin(query_dict, np.array(conf_dict.origin))
 
     assert (len(result_dict) == len(query_dict))
@@ -113,6 +130,7 @@ def main():
     xt_errs = []
     yt_errs = []
     zt_errs = []
+    inlier_percentage = []
     for img_name, result_pose in result_dict.items():
         query_pose = query_dict[img_name]
         pose_error = np.linalg.inv(result_pose).dot(query_pose)
@@ -121,6 +139,7 @@ def main():
         yt_errs.append(translation_error(pose_error)[2])
         zt_errs.append(translation_error(pose_error)[3])
         r_errs.append(rotation_error(pose_error) * 180 / np.pi)
+        inlier_percentage.append(100 * get_inlier_percentage(result_log_dict, img_name))
 
     t_errs = np.array(t_errs)
     xt_errs = np.array(xt_errs)
@@ -137,6 +156,19 @@ def main():
 
     # plot rotational error
     plot_evaluation(plotter, r_errs, interval, 'Angle threshold [deg]', 'Correctly localized queries [%]', 'Rotational Error')
+
+    fig = plt.figure()
+    ax1 = fig.add_subplot(111)
+    ax1.plot(range(len(t_errs)), t_errs)
+    ax1.set_ylabel('Translational Error [meters]')
+    ax1.set_xlabel('Idx')
+    plt.grid()
+
+    ax2 = ax1.twinx()
+    ax2.plot(range(len(t_errs)), inlier_percentage, 'r')
+    ax2.set_ylabel('Inlier Percentage [%]')
+
+    plt.savefig(evaluation_dir / 'PnP.png', format='png', bbox_inches='tight', pad_inches=0)
 
 
 if __name__ == '__main__':
