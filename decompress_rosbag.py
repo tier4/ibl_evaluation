@@ -39,6 +39,8 @@ def main():
     args = parse_args()
     conf_dict = edict(load_yaml(args.config))
     output_dir = Path(conf_dict.output_dir)
+    if not output_dir.exists():
+        os.makedirs(output_dir)
 
     rosbag_name_list = glob.glob(conf_dict.input_dir + '/{}*.bag'.format(conf_dict.prefix))
     print('Find {} rosbags.'.format(len(rosbag_name_list)))
