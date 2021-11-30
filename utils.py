@@ -5,6 +5,7 @@ import pandas as pd
 import shutil
 import subprocess
 import numpy as np
+import cv2
 import transformations
 import matplotlib.pyplot as plt
 
@@ -17,7 +18,7 @@ class NDT2Image:
             self.img_name = img_name
             self.img_pose = img_pose
 
-    def __init__(self, input_dir, output_dir, scope, T_sensor_cam, img_ext='.jpg'):
+    def __init__(self, input_dir, output_dir, scope, T_sensor_cam, downsampling_factor, img_ext='.jpg'):
         self.input_dir = input_dir
         self.input_img_dir = os.path.join(input_dir, 'image')
         self.ndt_pose_file = os.path.join(input_dir, 'pose.txt')
@@ -42,6 +43,7 @@ class NDT2Image:
         T_base_sensor[0:3, 3] = np.array([0.6895, 0.0, 2.1])
 
         self.T_base_optical = T_base_sensor.dot(T_sensor_cam.dot(T_cam_optical))
+        self.downsampling_factor = downsampling_factor
 
     def name2ts(self, name):
         return int(name.split('.')[0])
@@ -92,9 +94,15 @@ class NDT2Image:
 
         return pose_k
 
-    def copy_images(self, input_dir, output_dir, input_img_names):
+    def copy_images(self, input_dir, output_dir, input_img_names, downsampling_factor):
         for img_name in input_img_names:
-            shutil.copyfile(os.path.join(input_dir, img_name), os.path.join(output_dir, img_name))
+            img = cv2.imread(os.path.join(input_dir, img_name))
+            width = int(img.shape[1] / downsampling_factor)
+            height = int(img.shape[0] / downsampling_factor)
+            resized_img = cv2.resize(img, (width, height), interpolation=cv2.INTER_LANCZOS4)
+            cv2.imwrite(os.path.join(output_dir, img_name), resized_img)
+
+            # shutil.copyfile(os.path.join(input_dir, img_name), os.path.join(output_dir, img_name))
 
     def process(self):
         print('================ PREPROCESS Tier4 ================')
@@ -134,7 +142,8 @@ class NDT2Image:
 
         self.copy_images(self.input_img_dir,
                          self.output_img_dir,
-                         self.input_img_names)
+                         self.input_img_names,
+                         self.downsampling_factor)
 
         print('Done.')
 
@@ -243,16 +252,16 @@ class Reconstructor:
         subprocess.call(command, shell=True, stdout=open(os.devnull, 'w'))
         print('Cost %.2f s.' % (time.time() - timer))
 
-        # print('Running mapper ...')
-        # timer = time.time()
-        # command = 'colmap mapper --database_path %s \
-        #            --image_path %s \
-        #            --output_path %s' \
-        #           % (os.path.join(self.sfm_colmap_dir, 'database.db'),
-        #              self.db_img_dir,
-        #              self.sfm_colmap_dir)
-        # subprocess.call(command, shell=True, stdout=open(os.devnull, 'w'))
-        # print('Cost %.2f s.' % (time.time() - timer))
+        print('Running mapper ...')
+        timer = time.time()
+        command = 'colmap mapper --database_path %s \
+                   --image_path %s \
+                   --output_path %s' \
+                  % (os.path.join(self.sfm_colmap_dir, 'database.db'),
+                     self.db_img_dir,
+                     self.sfm_colmap_dir)
+        subprocess.call(command, shell=True, stdout=open(os.devnull, 'w'))
+        print('Cost %.2f s.' % (time.time() - timer))
 
 
 class Plotter:
