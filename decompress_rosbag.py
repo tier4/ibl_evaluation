@@ -49,6 +49,9 @@ def main():
         print('Decompressing {}...'.format(rosbag_name.split('/')[-1]))
         bag = rosbag.Bag(rosbag_name, 'r')
         for topic, msg, ts in bag.read_messages():
+            # if topic == '/sensing/camera/0/camera_info':
+            #     print(msg)
+            #     exit()
             if topic == conf_dict.topic:
                 image = decompress_image(msg, conf_dict.is_BGR)
                 cv2.imwrite(str(output_dir / '{}.jpg'.format(ts)), image)

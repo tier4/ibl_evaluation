@@ -94,13 +94,34 @@ class NDT2Image:
 
         return pose_k
 
-    def copy_images(self, input_dir, output_dir, input_img_names, downsampling_factor):
+    def copy_images(self, input_dir, output_dir, input_img_names, downsampling_factor, threshold=0.01):
+        prev_image_dict = None
+        cur_image_dict = None
+        ret_img_name_list = []
+
         for img_name in input_img_names:
-            img = cv2.imread(os.path.join(input_dir, img_name))
-            width = int(img.shape[1] / downsampling_factor)
-            height = int(img.shape[0] / downsampling_factor)
-            resized_img = cv2.resize(img, (width, height), interpolation=cv2.INTER_LANCZOS4)
-            cv2.imwrite(os.path.join(output_dir, img_name), resized_img)
+            cur_image = cv2.imread(os.path.join(input_dir, img_name))
+            width = int(cur_image.shape[1] / downsampling_factor)
+            height = int(cur_image.shape[0] / downsampling_factor)
+            resized_img = cv2.resize(cur_image, (width, height), interpolation=cv2.INTER_LANCZOS4)
+            
+            cur_image_dict = {
+                'name': img_name,
+                'image': resized_img
+            }
+
+            if prev_image_dict is None:
+                prev_image_dict = cur_image_dict
+                continue
+            else:
+                if np.mean(np.abs(cur_image_dict['image'].astype(float) / 255.0 - \
+                                  prev_image_dict['image'].astype(float) / 255.0)) > threshold:
+                    cv2.imwrite(os.path.join(output_dir, prev_image_dict['name']), prev_image_dict['image'])
+                    ret_img_name_list.append(prev_image_dict['name'])
+                    prev_image_dict = cur_image_dict
+            
+        print("Dynamic images: %d ..." % len(ret_img_name_list))
+        return ret_img_name_list
 
             # shutil.copyfile(os.path.join(input_dir, img_name), os.path.join(output_dir, img_name))
 
@@ -110,7 +131,11 @@ class NDT2Image:
         print("Output to %s ." % self.output_dir)
         print("Camera images: %d => %d ." % (self.start_idx, self.end_idx))
 
-        img_names = self.input_img_names
+        img_names = self.copy_images(self.input_img_dir,
+                                     self.output_img_dir,
+                                     self.input_img_names,
+                                     self.downsampling_factor)
+
         img_tss = np.array([np.datetime64(self.name2ts(name), 'ns') for name in img_names])
         ndt_poses, ndt_tss = self.load_ndt(self.ndt_pose_file)
 
@@ -139,11 +164,6 @@ class NDT2Image:
         df.to_pickle(self.img_pose_file)
 
         print('Pickle saved.')
-
-        self.copy_images(self.input_img_dir,
-                         self.output_img_dir,
-                         self.input_img_names,
-                         self.downsampling_factor)
 
         print('Done.')
 
@@ -252,22 +272,23 @@ class Reconstructor:
         subprocess.call(command, shell=True, stdout=open(os.devnull, 'w'))
         print('Cost %.2f s.' % (time.time() - timer))
 
-        print('Running mapper ...')
-        timer = time.time()
-        command = 'colmap mapper --database_path %s \
-                   --image_path %s \
-                   --output_path %s' \
-                  % (os.path.join(self.sfm_colmap_dir, 'database.db'),
-                     self.db_img_dir,
-                     self.sfm_colmap_dir)
-        subprocess.call(command, shell=True, stdout=open(os.devnull, 'w'))
-        print('Cost %.2f s.' % (time.time() - timer))
+        # print('Running mapper ...')
+        # timer = time.time()
+        # command = 'colmap mapper --database_path %s \
+        #            --image_path %s \
+        #            --output_path %s' \
+        #           % (os.path.join(self.sfm_colmap_dir, 'database.db'),
+        #              self.db_img_dir,
+        #              self.sfm_colmap_dir)
+        # subprocess.call(command, shell=True, stdout=open(os.devnull, 'w'))
+        # print('Cost %.2f s.' % (time.time() - timer))
 
 
 class Plotter:
-    def __init__(self, output_dir):
+    def __init__(self, output_dir, save_file=True):
         self.output_dir = output_dir
         self.count = 0
+        self.save_file = save_file
     
     def plot(self, plots, xlabel, ylabel, title, labels=None, equal_axes=False, filename=None, callback=None, colors=None):
         if not labels:
@@ -303,7 +324,11 @@ class Plotter:
         if callback is not None:
             callback(plt.gcf(), plt.gca())
         
-        plt.savefig(os.path.join(self.output_dir, filename), format='png', bbox_inches='tight', pad_inches=0)
+        if self.save_file:
+            plt.savefig(os.path.join(self.output_dir, filename), format='png', bbox_inches='tight', pad_inches=0)
+        else:
+            plt.show()
+        
         self.count += 1
 
 
