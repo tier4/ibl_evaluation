@@ -157,19 +157,6 @@ def main():
     # plot rotational error
     plot_evaluation(plotter, r_errs, interval, 'Angle threshold [deg]', 'Correctly localized queries [%]', 'Rotational Error')
 
-    fig = plt.figure()
-    ax1 = fig.add_subplot(111)
-    ax1.plot(range(len(t_errs)), t_errs)
-    ax1.set_ylabel('Translational Error [meters]')
-    ax1.set_xlabel('Idx')
-    plt.grid()
-
-    ax2 = ax1.twinx()
-    ax2.plot(range(len(t_errs)), inlier_percentage, 'r')
-    ax2.set_ylabel('Inlier Percentage [%]')
-
-    plt.savefig(evaluation_dir / 'PnP.png', format='png', bbox_inches='tight', pad_inches=0)
-
 
 if __name__ == '__main__':
     main()
