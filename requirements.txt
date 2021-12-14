@@ -1,6 +1,6 @@
 transformations==2021.6.6
 scipy==1.6.2
-opencv_python==4.1.2.30
+opencv_python==4.2.0.32
 matplotlib==3.3.4
 tqdm==4.59.0
 pandas==1.2.4
