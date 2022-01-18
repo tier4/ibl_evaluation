@@ -17,7 +17,7 @@ def main():
     output_dir = Path(args.input_dir).parent
 
     img_array = []
-    for img_name in tqdm(sorted(glob.glob(args.input_dir + '/*.jpg'))[:500]):
+    for img_name in tqdm(sorted(glob.glob(args.input_dir + '/*.jpg'))[0:-1:4]):
         img = cv2.imread(img_name)
         height, width, layers = img.shape
         size = (width,height)
