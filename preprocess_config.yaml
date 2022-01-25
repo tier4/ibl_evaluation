@@ -1,11 +1,11 @@
 input_dir: /home/zijiejiang/Documents/dataset/shinjuku_d_1014_q_1012
 db_range:
   - 1602639072332893465
-  - 1602639420547202810
+  - 1602639358233864798
 query_range:
   - 1602484179509332320
-  - 1602484333812500134
-downsampling_factor: 2
+  - 1602484321408560396
+downsampling_factor: 1
 origin:
   - 81819.65625
   - 50382.8984375
@@ -30,3 +30,9 @@ cam_conf:
   - 0.087465
   - 4.8e-5
   - 0.000289
+cropping:
+  - 80
+  - 348
+  - 1360
+  - 732
+have_pcd: True
