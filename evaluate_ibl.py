@@ -20,8 +20,8 @@ def plot_evaluation(plotter, errs, interval, xlabel, ylabel, title, min_err=None
     max_thresh = max_err if max_err else np.max(errs)
     thresh_list = np.linspace(min_thresh, max_thresh, interval)
     for thresh in thresh_list:
-        counter.append(np.sum(errs < thresh) / len(errs))
-    
+        counter.append(np.sum(errs < thresh) / len(errs) * 100)
+
     plotter.plot(([thresh_list, counter],), xlabel, ylabel, title)
 
 
@@ -42,6 +42,18 @@ def translation_error(pose_error):
     return trans_error, dx, dy, dz
 
 
+def get_topK_error(img_name_list, error_type, error_list, output_dir, k=10):
+    index_list = np.argsort(error_list)[-k:]
+
+    with open(output_dir / 'top{}_error_{}.txt'.format(k, error_type), 'w') as f:
+        nl = '\n'
+        for idx in index_list:
+            log_txt = 'image name : {}{}error_type : {}{}error : {}{}' \
+                      .format(img_name_list[idx], nl, error_type, nl, error_list[idx], nl)
+
+            f.write(log_txt + nl)
+
+
 def get_inlier_percentage(result_log_dict, qname):
     qname = 'query/image/' + qname
 
@@ -53,7 +65,7 @@ def get_inlier_percentage(result_log_dict, qname):
 
 def load_pose_txt(path, inverse=False):
     pose_dict = {}
-    
+
     with open(path, 'r') as f:
         for line in f.readlines():
             line_list = line.strip('\n').split(' ')
@@ -66,9 +78,9 @@ def load_pose_txt(path, inverse=False):
 
             if inverse:
                 pose = np.linalg.inv(pose)
-            
+
             pose_dict[img_name] = pose
-    
+
     return pose_dict
 
 
@@ -82,7 +94,7 @@ def load_pose_pickle(path):
 
     for idx, img_pose in enumerate(img_pose_list):
         pose_dict[img_path_list[idx]] = img_pose
-    
+
     return pose_dict
 
 
@@ -124,7 +136,7 @@ def main():
     assert (len(result_dict) == len(query_dict))
     for img_name in result_dict.keys():
         assert (img_name in query_dict.keys())
-    
+
     t_errs = []
     r_errs = []
     xt_errs = []
@@ -156,6 +168,9 @@ def main():
 
     # plot rotational error
     plot_evaluation(plotter, r_errs, interval, 'Angle threshold [deg]', 'Correctly localized queries [%]', 'Rotational Error')
+
+    get_topK_error(list(result_dict.keys()), 'translation', t_errs, evaluation_dir, k=20)
+    get_topK_error(list(result_dict.keys()), 'rotation', r_errs, evaluation_dir, k=20)
 
 
 if __name__ == '__main__':
