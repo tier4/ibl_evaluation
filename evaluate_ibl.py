@@ -172,6 +172,14 @@ def main():
     get_topK_error(list(result_dict.keys()), 'translation', t_errs, evaluation_dir, k=20)
     get_topK_error(list(result_dict.keys()), 'rotation', r_errs, evaluation_dir, k=20)
 
+    print('### Statics ###')
+    print('# Rate (%) of correctly localized queries within 0.25m: {:.1f}%'.format(np.sum(t_errs < 0.25) / len(t_errs) * 100))
+    print('# Rate (%) of correctly localized queries within 0.50m: {:.1f}%'.format(np.sum(t_errs < 0.50) / len(t_errs) * 100))
+    print('# Rate (%) of correctly localized queries within 1.00m: {:.1f}%'.format(np.sum(t_errs < 1.00) / len(t_errs) * 100))
+
+    print('# Median positional error: {:.2f} m'.format(np.median(t_errs)))
+    print('# Median rotational error: {:.2f} degree'.format(np.median(r_errs)))
+
 
 if __name__ == '__main__':
     main()
