@@ -1,5 +1,5 @@
-input_dir: '/home/zijiejiang/Documents/dataset/shinjuku/rosbag'
-output_dir: '/home/zijiejiang/Documents/dataset/shinjuku/decompress'
+input_dir: '/mnt/zijiejiang/Documents/datasets/shinjuku_rosbag/20201104'
+output_dir: '/mnt/zijiejiang/Documents/datasets/shinjuku/20201104'
 prefix: ''
 # topic: '/sensing/camera/0/image_rect_color/compressed'
 topic: '/sensing/camera/traffic_light/left/image_raw/compressed'

@@ -35,4 +35,4 @@ cropping:
   - 348
   - 1360
   - 732
-have_pcd: True
+have_pcd: False
