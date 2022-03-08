@@ -1,5 +1,6 @@
-input_dir: '/home/zijiejiang/Documents/dataset/shinjuku/rosbag/11_04'
-output_dir: '/home/zijiejiang/Documents/dataset/shinjuku/decompress/11_04'
+input_dir: '/home/zijiejiang/Documents/dataset/shinjuku/rosbag'
+output_dir: '/home/zijiejiang/Documents/dataset/shinjuku/decompress'
 prefix: ''
-topic: '/sensing/camera/0/image_rect_color/compressed'
-is_BGR: False
+# topic: '/sensing/camera/0/image_rect_color/compressed'
+topic: '/sensing/camera/traffic_light/left/image_raw/compressed'
+is_BGR: True

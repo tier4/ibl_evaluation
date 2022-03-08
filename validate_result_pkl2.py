@@ -43,13 +43,11 @@ def convert_to_dict(kpts, map_points, inliers):
 
 
 image_result_pkl_path = '/home/zijiejiang/mount/shinjuku_d_1014_q_1012/processed_sfm/output/result_log.pkl'
-lidar_result_pkl_path = '/home/zijiejiang/mount/shinjuku_d_1014_q_1012/processed_lidar/output/result_log.pkl'
 gt_result_path = '/home/zijiejiang/mount/shinjuku_d_1014_q_1012/processed_sfm/query/pose.pickle'
 processed_dir = '/home/zijiejiang/mount/shinjuku_d_1014_q_1012/processed_sfm'
 origin = np.array([81819.65625, 50382.8984375, 40.998046875])
 
 image_result_dict = load_pkl(image_result_pkl_path)
-lidar_result_dict = load_pkl(lidar_result_pkl_path)
 gt_result_dict = load_pose_pickle(gt_result_path)
 shift_origin(gt_result_dict, origin)
 
@@ -64,13 +62,6 @@ print('Total matchings: {}'.format(len(image_result_dict['loc'][qname]['PnP_ret'
 # print(len(image_result_dict['loc'][qname]['keypoints_query']))
 # print(len(image_result_dict['loc'][qname]['points3D_xyz']))
 
-print("")
-print("### Lidar Statics ###")
-print('Number of Inliers: {}'.format(lidar_result_dict['loc'][qname]['PnP_ret']['num_inliers']))
-print('Total matchings: {}'.format(len(lidar_result_dict['loc'][qname]['PnP_ret']['inliers'])))
-# print(len(lidar_result_dict['loc'][qname]['keypoints_query']))
-# print(len(lidar_result_dict['loc'][qname]['points3D_xyz']))
-
 ########################
 # Same 2D point
 image_kpts = np.round(image_result_dict['loc'][qname]['keypoints_query'], 1)
@@ -78,21 +69,15 @@ image_3ds = np.round(image_result_dict['loc'][qname]['points3D_xyz'], 1)
 image_inliers = image_result_dict['loc'][qname]['PnP_ret']['inliers']
 image_info_dict = convert_to_dict(image_kpts, image_3ds, image_inliers)
 
-lidar_kpts = np.round(lidar_result_dict['loc'][qname]['keypoints_query'], 1)
-lidar_3ds = np.round(lidar_result_dict['loc'][qname]['points3D_xyz'], 1)
-lidar_inliers = lidar_result_dict['loc'][qname]['PnP_ret']['inliers']
-lidar_info_dict = convert_to_dict(lidar_kpts, lidar_3ds, lidar_inliers)
-
 print('The number of matched 2D points (image): {}'.format(len(image_info_dict)))
-print('The number of matched 2D points (lidar): {}'.format(len(lidar_info_dict)))
 
 image_data = plt.imread(os.path.join(processed_dir, qname))
 h, w, _ = image_data.shape
 
-_, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 5))
+_, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 5))
 cmap = cm.autumn
 
-ax[0].set_title('Use SfM Depth')
+ax.set_title('Use SfM Depth')
 for _, val_list in image_info_dict.items():
     kpt = val_list[0][0]
     total = 0
@@ -102,28 +87,13 @@ for _, val_list in image_info_dict.items():
         if val[2]:
             inlier_num += 1
 
-    ax[0].scatter(x=kpt[0],
+    ax.scatter(x=kpt[0],
                   y=kpt[1],
                   color=cmap(inlier_num / total), s=4)
 
-ax[1].set_title('Use Lidar Depth')
-for _, val_list in lidar_info_dict.items():
-    kpt = val_list[0][0]
-    total = 0
-    inlier_num = 0
-    for val in val_list:
-        total += 1
-        if val[2]:
-            inlier_num += 1
 
-    ax[1].scatter(x=kpt[0],
-                  y=kpt[1],
-                  color=cmap(inlier_num / total), s=4)
-
-ax[0].imshow(image_data)
-ax[0].axis('off')
-ax[1].imshow(image_data)
-ax[1].axis('off')
+ax.imshow(image_data)
+ax.axis('off')
 plt.tight_layout()
 plt.show()
 

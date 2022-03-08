@@ -143,6 +143,8 @@ def main():
     yt_errs = []
     zt_errs = []
     inlier_percentage = []
+    query_traj = []
+    result_traj = []
     for img_name, result_pose in result_dict.items():
         query_pose = query_dict[img_name]
         pose_error = np.linalg.inv(result_pose).dot(query_pose)
@@ -153,11 +155,16 @@ def main():
         r_errs.append(rotation_error(pose_error) * 180 / np.pi)
         inlier_percentage.append(100 * get_inlier_percentage(result_log_dict, img_name))
 
+        query_traj.append(query_pose[:3, 3])
+        result_traj.append(result_pose[:3, 3])
+
     t_errs = np.array(t_errs)
     xt_errs = np.array(xt_errs)
     yt_errs = np.array(yt_errs)
     zt_errs = np.array(zt_errs)
     r_errs = np.array(r_errs)
+    query_traj = np.array(query_traj)
+    result_traj = np.array(result_traj)
 
     interval = 20
     # plot translational error
@@ -168,6 +175,23 @@ def main():
 
     # plot rotational error
     plot_evaluation(plotter, r_errs, interval, 'Angle threshold [deg]', 'Correctly localized queries [%]', 'Rotational Error')
+
+    # plot (two) trajectories
+    plot_XY_array = []
+    plot_XZ_array = []
+    plot_YZ_array = []
+
+    plot_XY_array.append([query_traj[:, 0], query_traj[:, 1]])
+    plot_XZ_array.append([query_traj[:, 0], query_traj[:, 2]])
+    plot_YZ_array.append([query_traj[:, 1], query_traj[:, 2]])
+
+    plot_XY_array.append([result_traj[:, 0], result_traj[:, 1]])
+    plot_XZ_array.append([result_traj[:, 0], result_traj[:, 2]])
+    plot_YZ_array.append([result_traj[:, 1], result_traj[:, 2]])
+
+    plotter.plot(tuple(plot_XY_array), 'X [m]', 'Y [m]', 'XY Plot', labels=['NDT', 'IBL'], equal_axes=True)
+    plotter.plot(tuple(plot_XZ_array), 'X [m]', 'Z [m]', 'XZ Plot', labels=['NDT', 'IBL'], equal_axes=True)
+    plotter.plot(tuple(plot_YZ_array), 'Y [m]', 'Z [m]', 'YZ Plot', labels=['NDT', 'IBL'], equal_axes=True)
 
     get_topK_error(list(result_dict.keys()), 'translation', t_errs, evaluation_dir, k=20)
     get_topK_error(list(result_dict.keys()), 'rotation', r_errs, evaluation_dir, k=20)
