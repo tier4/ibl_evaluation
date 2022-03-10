@@ -70,19 +70,19 @@ def main():
     cam_conf[3] = config_dict['cropping'][3] - config_dict['cropping'][1]
     cam_conf[6] = cam_conf[6] - config_dict['cropping'][0]
     cam_conf[7] = cam_conf[7] - config_dict['cropping'][1]
-    
+
     # Scaling
     for i in range(2, 8):
         cam_conf[i] = scaling_factor * cam_conf[i]
-    
+
     cam_conf = tuple(cam_conf)
-    
+
     # 2. convert NDT poses to image poses, align timestamps, copy images, etc.
     db_processor = NDT2Image(os.path.join(raw_dir, 'database'),
                              processed_db_dir,
                              config_dict['db_range'], T_sensor_cam, config_dict['downsampling_factor'], config_dict['cropping'], have_pcd=have_pcd)
     db_processor.process()
-    
+
     query_processeor = NDT2Image(os.path.join(raw_dir, 'query'),
                                  processed_query_dir,
                                  config_dict['query_range'], T_sensor_cam, config_dict['downsampling_factor'], config_dict['cropping'], have_pcd=have_pcd)

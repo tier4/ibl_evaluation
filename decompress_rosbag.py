@@ -21,7 +21,7 @@ def decompress_image(ros_image_compressed, is_BGR=False):
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     except Exception as e:
         print(e)
-    
+
     return image
 
 
@@ -49,13 +49,13 @@ def main():
         print('Decompressing {}...'.format(rosbag_name.split('/')[-1]))
         bag = rosbag.Bag(rosbag_name, 'r')
         for topic, msg, ts in bag.read_messages():
-            # if topic == '/sensing/camera/0/camera_info':
+            # if topic == '/sensing/camera/traffic_light/left/camera_info':
             #     print(msg)
             #     exit()
             if topic == conf_dict.topic:
                 image = decompress_image(msg, conf_dict.is_BGR)
                 cv2.imwrite(str(output_dir / '{}.jpg'.format(ts)), image)
-    
+
     print('Done')
 
 
