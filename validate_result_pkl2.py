@@ -42,10 +42,10 @@ def convert_to_dict(kpts, map_points, inliers):
     return info_dict
 
 
-image_result_pkl_path = '/home/zijiejiang/mount/shinjuku_d_1014_q_1012/processed_sfm/output/result_log.pkl'
-gt_result_path = '/home/zijiejiang/mount/shinjuku_d_1014_q_1012/processed_sfm/query/pose.pickle'
-processed_dir = '/home/zijiejiang/mount/shinjuku_d_1014_q_1012/processed_sfm'
-origin = np.array([81819.65625, 50382.8984375, 40.998046875])
+image_result_pkl_path = '/home/zijiejiang/mount/dataset/shinjuku_d_1104_q_1105_HDR/processed/output/result_log.pkl'
+gt_result_path = '/home/zijiejiang/mount/dataset/shinjuku_d_1104_q_1105_HDR/processed/query/pose.pickle'
+processed_dir = '/home/zijiejiang/mount/dataset/shinjuku_d_1104_q_1105_HDR/processed'
+origin = np.array([81819.1015625, 50384.6484375, 40.9343147278])
 
 image_result_dict = load_pkl(image_result_pkl_path)
 gt_result_dict = load_pose_pickle(gt_result_path)
@@ -53,7 +53,7 @@ shift_origin(gt_result_dict, origin)
 
 # ts = 1602484279208413917
 # ts = 1602484292909657750
-ts = 1602484223515190443
+ts = 1604559980309502518  # HDR: 1604559980309502518 RGB: 1604559980317300096
 qname = 'query/image/{}.jpg'.format(ts)
 
 print("### Image-Only Statics ###")
