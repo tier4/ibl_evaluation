@@ -2,7 +2,6 @@ import os
 import time
 import yaml
 import pandas as pd
-import shutil
 import subprocess
 import numpy as np
 import open3d as o3d
@@ -23,7 +22,7 @@ class NDT2Image:
             self.pcd_name = pcd_name
             self.T_img_pcd = T_img_pcd
 
-    def __init__(self, input_dir, output_dir, scope, T_sensor_cam, downsampling_factor, cropping_param, img_ext='.jpg', have_pcd=False):
+    def __init__(self, input_dir, output_dir, scope, T_sensor_cam, downsampling_factor, img_ext='.jpg', have_pcd=False):
         self.input_dir = input_dir
         self.input_img_dir = os.path.join(input_dir, 'image')
         self.input_pcd_dir = os.path.join(input_dir, 'pcd')
@@ -32,7 +31,7 @@ class NDT2Image:
         self.output_dir = output_dir
         self.output_img_dir = os.path.join(output_dir, 'image')
         self.img_pose_file = os.path.join(output_dir, 'pose.pickle')
-        
+
         input_img_names = sorted(os.listdir(self.input_img_dir))
         start_img = str(scope[0]) + img_ext
         end_img = str(scope[1]) + img_ext
@@ -40,7 +39,7 @@ class NDT2Image:
         assert (end_img in input_img_names)
         self.start_idx = input_img_names.index(start_img)
         self.end_idx = input_img_names.index(end_img)
-        self.input_img_names = input_img_names[self.start_idx: self.end_idx+1]
+        self.input_img_names = input_img_names[self.start_idx: self.end_idx + 1]
 
         self.have_pcd = have_pcd
         if self.have_pcd:
@@ -54,10 +53,33 @@ class NDT2Image:
 
         self.T_base_optical = T_base_sensor.dot(T_sensor_cam.dot(T_cam_optical))
         self.downsampling_factor = downsampling_factor
-        self.x0 = cropping_param[0]
-        self.y0 = cropping_param[1]
-        self.x1 = cropping_param[2]
-        self.y1 = cropping_param[3]
+
+        # self.cam_conf = cam_conf
+        # self.cameraMatrix = np.array([[cam_conf[3], 0, cam_conf[5]],
+        #                               [0, cam_conf[4], cam_conf[6]],
+        #                               [0, 0, 1]])
+        # self.distCoeffs = np.array([cam_conf[7], cam_conf[8], cam_conf[9], cam_conf[10]])
+        # self.imageSize = (cam_conf[1], cam_conf[2])
+
+        # self.newCameraMatrix, _ = cv2.getOptimalNewCameraMatrix(self.cameraMatrix, self.distCoeffs, self.imageSize, 0)
+
+        # new_cam_conf = [1]
+        # new_cam_conf.extend(['OPENCV', cam_conf[1], cam_conf[2],
+        #                      self.newCameraMatrix[0][0], self.newCameraMatrix[1][1],
+        #                      self.newCameraMatrix[0][2], self.newCameraMatrix[1][2],
+        #                      0.0, 0.0, 0.0, 0.0])
+        # # Consider cropping
+        # new_cam_conf[2] = cropping_param[2] - cropping_param[0]
+        # new_cam_conf[3] = cropping_param[3] - cropping_param[1]
+        # new_cam_conf[6] = new_cam_conf[6] - cropping_param[0]
+        # new_cam_conf[7] = new_cam_conf[7] - cropping_param[1]
+
+        # # Scaling
+        # scaling_factor = 1 / downsampling_factor
+        # for i in range(2, 8):
+        #     new_cam_conf[i] = scaling_factor * new_cam_conf[i]
+
+        # self.new_cam_conf = tuple(new_cam_conf)
 
     def name2ts(self, name):
         return int(name.split('.')[0])
@@ -90,7 +112,7 @@ class NDT2Image:
                     yaml_str = ''
                 else:
                     yaml_str += line
-        
+
         return ndt_poses, np.array(ndt_tss)
 
     def find_timestamp_in_between(self, ts, tss_to_search):
@@ -100,9 +122,9 @@ class NDT2Image:
         index = 0
         while tss_to_search[index] <= ts:
             index += 1
-        
+
         return index - 1, index
-    
+
     def find_timestamp_nearest(self, ts, tss_to_search):
         try:
             assert (ts >= tss_to_search[0])
@@ -130,7 +152,15 @@ class NDT2Image:
             width = int(cur_image.shape[1] / downsampling_factor)
             height = int(cur_image.shape[0] / downsampling_factor)
             resized_img = cv2.resize(cur_image, (width, height), interpolation=cv2.INTER_LANCZOS4)
-            
+
+            # # Undistortion
+            # dst = cv2.undistort(cur_image, self.cameraMatrix, self.distCoeffs, None, self.newCameraMatrix)
+
+            # resized_img = dst[self.y0:self.y1, self.x0:self.x1] # cropping
+            # width = int(resized_img.shape[1] / downsampling_factor)
+            # height = int(resized_img.shape[0] / downsampling_factor)
+            # resized_img = cv2.resize(resized_img, (width, height), interpolation=cv2.INTER_LANCZOS4)
+
             cur_image_dict = {
                 'name': img_name,
                 'image': resized_img
@@ -140,13 +170,12 @@ class NDT2Image:
                 prev_image_dict = cur_image_dict
                 continue
             else:
-                if np.mean(np.abs(cur_image_dict['image'].astype(float) / 255.0 - \
-                                  prev_image_dict['image'].astype(float) / 255.0)) > threshold:
-                    image_to_write = prev_image_dict['image'][self.y0:self.y1, self.x0:self.x1]
+                if np.mean(np.abs(cur_image_dict['image'].astype(float) / 255.0 - prev_image_dict['image'].astype(float) / 255.0)) > threshold:
+                    image_to_write = prev_image_dict['image']
                     cv2.imwrite(os.path.join(output_dir, prev_image_dict['name']), image_to_write)
                     ret_img_name_list.append(prev_image_dict['name'])
                     prev_image_dict = cur_image_dict
-            
+
         print("Dynamic images: %d ..." % len(ret_img_name_list))
         return ret_img_name_list
 
@@ -168,7 +197,7 @@ class NDT2Image:
         img_tss = (img_tss - start_ts) / np.timedelta64(1, 's')
         ndt_tss = (ndt_tss - start_ts) / np.timedelta64(1, 's')
         if self.have_pcd:
-            pcd_tss = np.array([np.datetime64(self.name2ts(name) * 1000, 'ns') for name in self.input_pcd_names]) # IMPORTANT: * 1000
+            pcd_tss = np.array([np.datetime64(self.name2ts(name) * 1000, 'ns') for name in self.input_pcd_names])  # IMPORTANT: * 1000
             pcd_tss = (pcd_tss - start_ts) / np.timedelta64(1, 's')
 
         frames = []
@@ -199,9 +228,9 @@ class NDT2Image:
                 frame = self.Frame(img_name, img_pose, pcd_name, T_img_pcd)
             else:
                 frame = self.Frame(img_name, img_pose)
-            
+
             frames.append(frame)
-        
+
         data = {
             'image_name': [f.img_name for f in frames],
             'image_pose': [f.img_pose for f in frames],
@@ -235,16 +264,16 @@ class Reconstructor:
     def shift_origin(self, poses, origin):
         for idx in range(len(poses)):
             poses[idx][0:3, 3] -= origin
-        
+
         return poses
-    
+
     def write_images_txt(self, output_dir, img_names, img_poses):
         with open(os.path.join(output_dir, 'images.txt'), 'w') as f:
             f.write('# Image list with two lines of data per image:\n')
             f.write('#   IMAGE_ID, QW, QX, QY, QZ, TX, TY, TZ, CAMERA_ID, NAME\n')
             f.write('#   POINTS2D[] as (X, Y, POINT3D_ID)\n')
             f.write('# Number of images: 500, mean observations per image: 0\n')
-            
+
             assert len(img_names) == len(img_poses)
             for idx in range(len(img_names)):
                 img_id = idx
@@ -253,7 +282,7 @@ class Reconstructor:
                 xyz = img_pose_inv[:3, 3]
                 img_name = img_names[idx]
 
-                line = '%d %f %f %f %f %f %f %f %d %s\n' % (img_id, quat[0], quat[1], quat[2], quat[3], \
+                line = '%d %f %f %f %f %f %f %f %d %s\n' % (img_id, quat[0], quat[1], quat[2], quat[3],
                                                             xyz[0], xyz[1], xyz[2], 1, img_name)
                 f.write(line)
                 f.write('\n')
@@ -291,7 +320,7 @@ class Reconstructor:
         self.write_cameras_txt(self.sfm_empty_dir)
 
         print('Done')
-        
+
     def generate_sfm_colmap(self):
         print('================ Generating SfM Colmap ================')
         print("Preprocessing %s ..." % self.db_dir)
@@ -363,7 +392,7 @@ class DepthCompleter:
         self.Y0 = cam_conf[7]
         self.K1 = cam_conf[8]
         self.K2 = cam_conf[9]
-    
+
     def process(self):
         print('================ Processing PCD Files ================')
         print("Preprocessing %s ..." % self.pcd_dir)
@@ -384,7 +413,7 @@ class DepthCompleter:
             pcd_points = np.hstack([pcd_points, np.ones((len(pcd_points), 1))])
             cam_points = self.T_optical_base @ np.transpose(pcd_points)
 
-            cam_points = T_img_pcd @ cam_points # Timestamp Alignment
+            cam_points = T_img_pcd @ cam_points  # Timestamp Alignment
 
             cam_points = np.transpose(cam_points)[:, :3]
 
@@ -423,7 +452,7 @@ class Plotter:
         self.output_dir = output_dir
         self.count = 0
         self.save_file = save_file
-    
+
     def plot(self, plots, xlabel, ylabel, title, labels=None, equal_axes=False, filename=None, callback=None, colors=None):
         if not labels:
             labels_txt = [None] * len(plots)
@@ -439,7 +468,7 @@ class Plotter:
             if colors:
                 args['color'] = colors[i]
             plt.plot(*plots[i], linewidth=1, **args)
-        
+
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
         if title:
@@ -447,22 +476,22 @@ class Plotter:
 
         if equal_axes:
             plt.axis('equal')
-        
+
         if labels:
             plt.legend()
-        
+
         plt.grid()
         if filename is None:
             filename = '%02d_%s.png' % (self.count, '_'.join(title.lower().split()))
-        
+
         if callback is not None:
             callback(plt.gcf(), plt.gca())
-        
+
         if self.save_file:
             plt.savefig(os.path.join(self.output_dir, filename), format='png', bbox_inches='tight', pad_inches=0)
         else:
             plt.show()
-        
+
         self.count += 1
 
 
@@ -474,12 +503,12 @@ def create_dir_if_not_exist(dir):
 def load_yaml(path):
     with open(path, 'r') as f:
         yaml_dict = yaml.full_load(f)
-    
+
     return yaml_dict
 
 
 def load_pickle(path):
-    df =  pd.read_pickle(path)
+    df = pd.read_pickle(path)
 
     return df
 
@@ -510,136 +539,136 @@ def get_camera_view_pointcloud(xyz,
 
 
 def get_occluded_points(xyz, neighborhood_radius, z_threshold):
-  """Remove points that are occluded by others from a camera-view point cloud.
-  Args:
-    xyz: A Nx3 matrix representing the point cloud in the camera view.
-    neighborhood_radius: The radius around each point in which it occludes
-      others.
-    z_threshold: Minimum z distance betweem two points for them considered to
-      be occluding each other. If two points are verty close in z, they likely
-      belong to the same surface and thus do not occlude each other.
-  Returns:
-    A list of indices in xyz corresponding to points that are occluded.
-  """
+    """Remove points that are occluded by others from a camera-view point cloud.
+    Args:
+        xyz: A Nx3 matrix representing the point cloud in the camera view.
+        neighborhood_radius: The radius around each point in which it occludes
+        others.
+        z_threshold: Minimum z distance betweem two points for them considered to
+        be occluding each other. If two points are verty close in z, they likely
+        belong to the same surface and thus do not occlude each other.
+    Returns:
+        A list of indices in xyz corresponding to points that are occluded.
+    """
 
-  def get_bin(xz, yz):
-    xbin = int(round(xz / neighborhood_radius))
-    ybin = int(round(yz / neighborhood_radius))
-    return xbin, ybin
+    def get_bin(xz, yz):
+        xbin = int(round(xz / neighborhood_radius))
+        ybin = int(round(yz / neighborhood_radius))
+        return xbin, ybin
 
-  xs, ys, zs = _split(xyz)
-  xzs = xs / zs
-  yzs = ys / zs
-  grid = collections.defaultdict(lambda: np.inf)
-  for ind in range(xyz.shape[0]):
-    # Place each point in the bin where it belongs, and in the neighboring bins.
-    # Keep only the closest point to the camera in each bin.
-    xbin, ybin = get_bin(xzs[ind], yzs[ind])
-    for i in range(-1, 2):
-      for j in range(-1, 2):
-        grid[(xbin + i, ybin + j)] = min(grid[(xbin + i, ybin + j)], zs[ind])
+    xs, ys, zs = _split(xyz)
+    xzs = xs / zs
+    yzs = ys / zs
+    grid = collections.defaultdict(lambda: np.inf)
+    for ind in range(xyz.shape[0]):
+        # Place each point in the bin where it belongs, and in the neighboring bins.
+        # Keep only the closest point to the camera in each bin.
+        xbin, ybin = get_bin(xzs[ind], yzs[ind])
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                grid[(xbin + i, ybin + j)] = min(grid[(xbin + i, ybin + j)], zs[ind])
 
-  occluded_indices = []
-  for ind in range(xyz.shape[0]):
-    # Loop over all points and see if they are occluded, by finding the closest
-    # point to the camera within the same bin and testing for the occlusion
-    # condition. A point is occluded if there is another point in the same bin
-    # that is far enough in z, so that it cannot belong to the same surface,
-    zmin = grid[get_bin(xzs[ind], yzs[ind])]
-    if zmin < (1 - z_threshold) * zs[ind]:
-      occluded_indices.append(ind)
-  return occluded_indices
+    occluded_indices = []
+    for ind in range(xyz.shape[0]):
+        # Loop over all points and see if they are occluded, by finding the closest
+        # point to the camera within the same bin and testing for the occlusion
+        # condition. A point is occluded if there is another point in the same bin
+        # that is far enough in z, so that it cannot belong to the same surface,
+        zmin = grid[get_bin(xzs[ind], yzs[ind])]
+        if zmin < (1 - z_threshold) * zs[ind]:
+            occluded_indices.append(ind)
+    return occluded_indices
 
 
 def render_rgb(xyz, c,
                H, W, K1, K2, FX, FY, X0, Y0):
-  """Given a colored cloud in camera coordinates, render an image.
-  This function is useful for visualization / debugging.
-  Args:
-    xyz: A 3xN matrix representing the point cloud in the camera view.
-    c: A N-long vector containing (greyscale) colors of the points.
-  Returns:
-    A rendered image.
-  """
-  x, y, z = _split(xyz)
-  u, v = _project_and_distort(x, y, z, K1, K2, FX, FY, X0, Y0)
-  u = np.floor(u).astype(int)
-  v = np.floor(v).astype(int)
+    """Given a colored cloud in camera coordinates, render an image.
+    This function is useful for visualization / debugging.
+    Args:
+        xyz: A 3xN matrix representing the point cloud in the camera view.
+        c: A N-long vector containing (greyscale) colors of the points.
+    Returns:
+        A rendered image.
+    """
+    x, y, z = _split(xyz)
+    u, v = _project_and_distort(x, y, z, K1, K2, FX, FY, X0, Y0)
+    u = np.floor(u).astype(int)
+    v = np.floor(v).astype(int)
 
-  rendered_c = np.full((int(H), int(W)), 0.0)
-  rendered_c[v, u] = c
-  rendered_c = np.stack([rendered_c] * 3, axis=2)
-  return rendered_c
+    rendered_c = np.full((int(H), int(W)), 0.0)
+    rendered_c[v, u] = c
+    rendered_c = np.stack([rendered_c] * 3, axis=2)
+    return rendered_c
 
 
 def render_z(xyz,
              H, W, K1, K2, FX, FY, X0, Y0):
-  """Given a colored cloud in camera coordinates, render a depth map.
-  This function is useful for visualization / debugging.
-  Args:
-    xyz: A 3xN matrix representing the point cloud in the camera view.
-  Returns:
-    A rendered depth map.
-  """
-  x, y, z = _split(xyz)
-  u, v = _project_and_distort(x, y, z, K1, K2, FX, FY, X0, Y0)
-  u = np.floor(u).astype(int)
-  v = np.floor(v).astype(int)
-  rendered_z = np.full((int(H), int(W)), -np.inf)
-  rendered_z[v, u] = z
-  rendered_z = np.where(rendered_z == -np.inf, 0, rendered_z)
-  return rendered_z
+    """Given a colored cloud in camera coordinates, render a depth map.
+    This function is useful for visualization / debugging.
+    Args:
+        xyz: A 3xN matrix representing the point cloud in the camera view.
+    Returns:
+        A rendered depth map.
+    """
+    x, y, z = _split(xyz)
+    u, v = _project_and_distort(x, y, z, K1, K2, FX, FY, X0, Y0)
+    u = np.floor(u).astype(int)
+    v = np.floor(v).astype(int)
+    rendered_z = np.full((int(H), int(W)), -np.inf)
+    rendered_z[v, u] = z
+    rendered_z = np.where(rendered_z == -np.inf, 0, rendered_z)
+    return rendered_z
 
 
 def filter_out_ot_frame_points(xyz,
                                H, W, K1, K2, FX, FY, X0, Y0):
-  """Remove all points in a camera-view pointcloud that are out of frame.
-  Args:
-    xyz: A Nx3 matrix representing the point cloud in the camera view.
-  Returns:
-    A Mx3 matrix and a M-long vector representing the filtered colored point
-    cloud.
-  """
-  x, y, z = _split(xyz)
-  u, v = _project_and_distort(x, y, z, K1, K2, FX, FY, X0, Y0)
-  u = np.floor(u).astype(int)
-  v = np.floor(v).astype(int)
-  valid_mask = np.logical_and.reduce((u >= 0, u < W, v >= 0, v < H), axis=0)
-  valid_points = valid_mask.nonzero()[0]
-  return xyz[valid_points, :]
+    """Remove all points in a camera-view pointcloud that are out of frame.
+    Args:
+        xyz: A Nx3 matrix representing the point cloud in the camera view.
+    Returns:
+        A Mx3 matrix and a M-long vector representing the filtered colored point
+        cloud.
+    """
+    x, y, z = _split(xyz)
+    u, v = _project_and_distort(x, y, z, K1, K2, FX, FY, X0, Y0)
+    u = np.floor(u).astype(int)
+    v = np.floor(v).astype(int)
+    valid_mask = np.logical_and.reduce((u >= 0, u < W, v >= 0, v < H), axis=0)
+    valid_points = valid_mask.nonzero()[0]
+    return xyz[valid_points, :]
 
 
 def sample_uniform(xyz, bin_size):
-  """subsamples a point cloud to be more uniform in perspective coordinates.
-  Args:
-    xyz: A Nx3 matrix representing the point cloud in the camera view.
-    bin_size: Size of a square in which we allow only a single point.
-  Returns:
-    A list of indices, corresponding to a subset of the original `xyz`, to keep.
-  """
-  x, y, z = _split(xyz)
-  xbins = (x / z / bin_size)
-  ybins = (y / z / bin_size)
-  xbins_rounded = np.round(xbins)
-  ybins_rounded = np.round(ybins)
-  xbins_diff = xbins_rounded - xbins
-  ybins_diff = ybins_rounded - ybins
-  diff_sq = xbins_diff**2 + ybins_diff**2
+    """subsamples a point cloud to be more uniform in perspective coordinates.
+    Args:
+        xyz: A Nx3 matrix representing the point cloud in the camera view.
+        bin_size: Size of a square in which we allow only a single point.
+    Returns:
+        A list of indices, corresponding to a subset of the original `xyz`, to keep.
+    """
+    x, y, z = _split(xyz)
+    xbins = (x / z / bin_size)
+    ybins = (y / z / bin_size)
+    xbins_rounded = np.round(xbins)
+    ybins_rounded = np.round(ybins)
+    xbins_diff = xbins_rounded - xbins
+    ybins_diff = ybins_rounded - ybins
+    diff_sq = xbins_diff**2 + ybins_diff**2
 
-  bin_to_ind = {}
-  for ind in range(len(diff_sq)):
-    bin_ = (xbins_rounded[ind], ybins_rounded[ind])
-    if bin_ not in bin_to_ind or diff_sq[ind] < bin_to_ind[bin_][1]:
-      bin_to_ind[bin_] = (ind, diff_sq[ind])
+    bin_to_ind = {}
+    for ind in range(len(diff_sq)):
+        bin_ = (xbins_rounded[ind], ybins_rounded[ind])
+        if bin_ not in bin_to_ind or diff_sq[ind] < bin_to_ind[bin_][1]:
+            bin_to_ind[bin_] = (ind, diff_sq[ind])
 
-  inds_to_keep = sorted([i[0] for i in bin_to_ind.values()])
-  return inds_to_keep
+    inds_to_keep = sorted([i[0] for i in bin_to_ind.values()])
+    return inds_to_keep
 
 
 def _split(matrix):
-  return [
-      np.squeeze(v, axis=1) for v in np.split(matrix, matrix.shape[1], axis=1)
-  ]
+    return [
+        np.squeeze(v, axis=1) for v in np.split(matrix, matrix.shape[1], axis=1)
+    ]
 
 
 def _project_and_distort(x, y, z,
@@ -664,4 +693,3 @@ def _project_and_distort(x, y, z,
     u = FX * xz + X0
     v = FY * yz + Y0
     return u, v
-

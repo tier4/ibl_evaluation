@@ -7,7 +7,6 @@ import numpy as np
 import transformations
 import pandas as pd
 import pickle
-import matplotlib.pyplot as plt
 
 from utils import load_yaml, Plotter, create_dir_if_not_exist
 
@@ -157,6 +156,10 @@ def main():
 
         query_traj.append(query_pose[:3, 3])
         result_traj.append(result_pose[:3, 3])
+
+        # if img_name == '.jpg':
+        #     print(t_errs[-1])
+        #     print(r_errs[-1])
 
     t_errs = np.array(t_errs)
     xt_errs = np.array(xt_errs)

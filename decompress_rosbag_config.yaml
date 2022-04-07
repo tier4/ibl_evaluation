@@ -1,6 +1,5 @@
-input_dir: '/mnt/zijiejiang/Documents/dataset/shinjuku_rosbag/20201105'
-output_dir: '/mnt/zijiejiang/Documents/dataset/shinjuku/20201105'
-prefix: ''
-# topic: '/sensing/camera/0/image_rect_color/compressed'
-topic: '/sensing/camera/traffic_light/left/image_raw/compressed'
-is_BGR: True
+input_dir: '/mnt/zijiejiang/Documents/dataset/shinjuku_rosbag/20201104'
+output_dir: '/mnt/zijiejiang/Documents/dataset/shinjuku/20201104'
+topic: '/sensing/camera/0/image_rect_color/compressed'
+# topic: '/sensing/camera/traffic_light/left/image_raw/compressed'
+is_BGR: False

@@ -1,5 +1,5 @@
-processed_dir: /home/zijiejiang/Documents/dataset/shinjuku_d_1014_q_1012/processed_lidar
+processed_dir: /home/zijiejiang/Documents/dataset/shinjuku_d_1104_q_1105/processed
 origin:
-  - 81819.65625
-  - 50382.8984375
-  - 40.998046875
+  - 81819.1015625
+  - 50384.6484375
+  - 40.9343147278

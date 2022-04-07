@@ -65,11 +65,6 @@ def main():
     T_sensor_cam[:3, 3] = config_dict.T_sensor_cam[4:]
     cam_conf = [1]
     cam_conf.extend(config_dict.cam_conf)
-    # Consider cropping
-    cam_conf[2] = config_dict['cropping'][2] - config_dict['cropping'][0]
-    cam_conf[3] = config_dict['cropping'][3] - config_dict['cropping'][1]
-    cam_conf[6] = cam_conf[6] - config_dict['cropping'][0]
-    cam_conf[7] = cam_conf[7] - config_dict['cropping'][1]
 
     # Scaling
     for i in range(2, 8):
@@ -80,12 +75,12 @@ def main():
     # 2. convert NDT poses to image poses, align timestamps, copy images, etc.
     db_processor = NDT2Image(os.path.join(raw_dir, 'database'),
                              processed_db_dir,
-                             config_dict['db_range'], T_sensor_cam, config_dict['downsampling_factor'], config_dict['cropping'], have_pcd=have_pcd)
+                             config_dict['db_range'], T_sensor_cam, config_dict['downsampling_factor'], have_pcd=have_pcd)
     db_processor.process()
 
     query_processeor = NDT2Image(os.path.join(raw_dir, 'query'),
                                  processed_query_dir,
-                                 config_dict['query_range'], T_sensor_cam, config_dict['downsampling_factor'], config_dict['cropping'], have_pcd=have_pcd)
+                                 config_dict['query_range'], T_sensor_cam, config_dict['downsampling_factor'], have_pcd=have_pcd)
     query_processeor.process()
 
     # 3. if have_pcd, process pcd files
@@ -98,6 +93,7 @@ def main():
         db_depth_completer.process()
 
     # 4. perform 3D reconstruction (generate sfm_colmap and sfm_empty)
+    # output_dir = '/home/zijiejiang/Documents/tmp_output_dir'
     reconstructor = Reconstructor(processed_db_dir,
                                   output_dir,
                                   np.array(config_dict['origin']),

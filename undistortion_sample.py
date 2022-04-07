@@ -12,11 +12,11 @@ newCameraMatrix, roi = cv2.getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, i
 print(newCameraMatrix)
 print(roi)
 
-sample_image_path = '/home/zijiejiang/Documents/colmap_tmp_model/1604454430922404596.jpg'
-sample_image = cv2.imread(sample_image_path)
-dst = cv2.undistort(sample_image, cameraMatrix, distCoeffs, None, newCameraMatrix)
+# sample_image_path = '/home/zijiejiang/Documents/colmap_tmp_model/1604454430922404596.jpg'
+# sample_image = cv2.imread(sample_image_path)
+# dst = cv2.undistort(sample_image, cameraMatrix, distCoeffs, None, newCameraMatrix)
 
-dst = cv2.resize(dst, (720, 465), interpolation=cv2.INTER_LANCZOS4)
+# dst = cv2.resize(dst, (720, 465), interpolation=cv2.INTER_LANCZOS4)
 
-cv2.imshow('Undistortion', dst)
-cv2.waitKey(0)
+# cv2.imshow('Undistortion', dst)
+# cv2.waitKey(0)

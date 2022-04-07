@@ -1,15 +1,15 @@
-input_dir: /home/zijiejiang/Documents/dataset/shinjuku_d_1014_q_1012
+input_dir: /home/zijiejiang/Documents/dataset/shinjuku_d_1104_q_1105
 db_range:
-  - 1602639072332893465
-  - 1602639358233864798
+  - 1604454343375368927
+  - 1604454443374423696
 query_range:
-  - 1602484179509332320
-  - 1602484321408560396
-downsampling_factor: 1
+  - 1604559939324422525
+  - 1604560072314538887
+downsampling_factor: 2
 origin:
-  - 81819.65625
-  - 50382.8984375
-  - 40.998046875
+  - 81819.1015625
+  - 50384.6484375
+  - 40.9343147278
 T_sensor_cam:
   - 0.9997767826301288
   - -0.005019424387927419
@@ -30,9 +30,4 @@ cam_conf:
   - 0.087465
   - 4.8e-5
   - 0.000289
-cropping:
-  - 80
-  - 348
-  - 1360
-  - 732
 have_pcd: False

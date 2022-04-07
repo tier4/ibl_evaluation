@@ -42,14 +42,14 @@ def main():
     if not output_dir.exists():
         os.makedirs(output_dir)
 
-    rosbag_name_list = glob.glob(conf_dict.input_dir + '/{}*.bag'.format(conf_dict.prefix))
+    rosbag_name_list = glob.glob(conf_dict.input_dir + '/*.bag')
     print('Find {} rosbags.'.format(len(rosbag_name_list)))
 
     for rosbag_name in sorted(rosbag_name_list):
         print('Decompressing {}...'.format(rosbag_name.split('/')[-1]))
         bag = rosbag.Bag(rosbag_name, 'r')
         for topic, msg, ts in bag.read_messages():
-            # if topic == '/sensing/camera/traffic_light/left/camera_info':
+            # if topic == '/tf_static':
             #     print(msg)
             #     exit()
             if topic == conf_dict.topic:
