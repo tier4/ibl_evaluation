@@ -6,6 +6,7 @@ from easydict import EasyDict as edict
 import cv2
 import pandas as pd
 import re
+import shutil
 
 from utils import create_dir_if_not_exist, load_yaml
 
@@ -106,6 +107,7 @@ def main():
     cmu_query_dir = os.path.join(input_dir, 'query')
     cmu_db_txt_file = os.path.join(input_dir, 'ground-truth-database-images-slice{}.txt'.format(config_dict.slice))
     cmu_query_txt_dir = os.path.join(input_dir, 'camera-poses')
+    cmu_colmap_db_file_path = os.path.join(input_dir, 'database{}.db'.format(config_dict.slice))
 
     processed_dir = os.path.join(input_dir, 'processed')
     processed_db_dir = os.path.join(processed_dir, 'database')
@@ -142,10 +144,11 @@ def main():
     cam0_conf = tuple(cam0_conf)
     cam1_conf = tuple(cam1_conf)
 
-    # 2. copy images, load poses, etc.
+    # 2. copy images and db file, load poses, etc.
     print('================ PREPROCESS CMU ================')
     print("Preprocessing %s ..." % input_dir)
     print("Output to %s ." % processed_dir)
+    shutil.copyfile(cmu_colmap_db_file_path, os.path.join(sfm_colmap_dir, 'database.db'))
     copy_images(cmu_db_dir, processed_db_img_dir, downsampling_factor=config_dict['downsampling_factor'])
     copy_images(cmu_query_dir, processed_query_img_dir, downsampling_factor=config_dict['downsampling_factor'])
 
