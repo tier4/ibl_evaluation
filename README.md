@@ -17,7 +17,7 @@ python decompress_rosbag.py
 Run `preprocess.py` to preprocess the workspace.
 
 ```python3
-python preprocess.py
+python preprocess_tier4.py
 ```
 
 Run `evaluate_ibl.py` to evaluate IBL results.

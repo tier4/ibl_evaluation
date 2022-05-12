@@ -1,8 +1,11 @@
-transformations==2021.6.6
-scipy==1.6.2
-opencv_python==4.2.0.32
+easydict==1.9
 matplotlib==3.3.4
-tqdm==4.59.0
-pandas==1.2.4
 numpy==1.20.1
+open3d==0.14.1
+opencv_python==4.1.2.30
+pandas==1.2.4
+pypng==0.0.21
 PyYAML==6.0
+scipy==1.6.2
+tqdm==4.59.0
+transformations==2021.6.6

@@ -107,7 +107,7 @@ def parse_args():
     parser.add_argument('-c', '--config',
                         type=str,
                         help='config file for evaluation',
-                        default=os.path.join(file_dir, 'evaluate_ibl_config.yaml'))
+                        default=os.path.join(file_dir, 'configs/evaluate_ibl_config.yaml'))
     args = parser.parse_args()
     return args
 
@@ -132,9 +132,9 @@ def main():
     query_dict = collections.OrderedDict(sorted(query_dict.items()))
     shift_origin(query_dict, np.array(conf_dict.origin))
 
-    assert (len(result_dict) == len(query_dict))
-    for img_name in result_dict.keys():
-        assert (img_name in query_dict.keys())
+    # assert (len(result_dict) >= len(query_dict))
+    # for img_name in result_dict.keys():
+    #     assert (img_name in query_dict.keys())
 
     t_errs = []
     r_errs = []
@@ -145,6 +145,9 @@ def main():
     query_traj = []
     result_traj = []
     for img_name, result_pose in result_dict.items():
+        if img_name not in query_dict:
+            continue
+
         query_pose = query_dict[img_name]
         pose_error = np.linalg.inv(result_pose).dot(query_pose)
         t_errs.append(translation_error(pose_error)[0])

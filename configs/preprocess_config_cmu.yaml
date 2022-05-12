@@ -1,0 +1,27 @@
+input_dir: /mnt/zijiejiang/Documents/dataset/Extended-CMU-Seasons/slice16
+slice: 16
+downsampling_factor: 1
+cam0_conf:
+  - 'OPENCV'
+  - 1024
+  - 768
+  - 868.993378
+  - 866.063001
+  - 525.942323
+  - 420.042529
+  - -0.399431
+  - 0.188924
+  - 0.000153
+  - 0.000571
+cam1_conf:
+  - 'OPENCV'
+  - 1024
+  - 768
+  - 873.382641
+  - 876.489513
+  - 529.324138
+  - 397.272397
+  - -0.397066
+  - 0.181925
+  - 0.000176
+  - -0.000579

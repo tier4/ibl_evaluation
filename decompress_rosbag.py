@@ -30,7 +30,7 @@ def parse_args():
     parser.add_argument('-c', '--config',
                         type=str,
                         help='config file for rosbag decompression',
-                        default=os.path.join(file_dir, 'decompress_rosbag_config.yaml'))
+                        default=os.path.join(file_dir, 'configs/decompress_rosbag_config.yaml'))
     args = parser.parse_args()
     return args
 

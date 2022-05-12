@@ -14,7 +14,7 @@ def parse_args():
     parser.add_argument('-c', '--config',
                         type=str,
                         help='config file for preprocessing',
-                        default=os.path.join(file_dir, 'preprocess_config.yaml'))
+                        default=os.path.join(file_dir, 'configs/preprocess_config.yaml'))
     args = parser.parse_args()
     return args
 
