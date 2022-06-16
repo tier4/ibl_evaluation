@@ -1,5 +1,5 @@
-input_dir: /mnt/zijiejiang/Documents/dataset/Extended-CMU-Seasons/slice17
-slice: 17
+input_dir: /mnt/zijiejiang/Documents/dataset/Extended-CMU-Seasons/slice9
+slice: 9
 downsampling_factor: 1
 cam0_conf:
   - 'OPENCV'
