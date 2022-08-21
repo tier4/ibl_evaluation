@@ -1,0 +1,4 @@
+input_dir: '/home/zijiejiang/pilot_dataset/osaka/iv_0'
+output_dir: '/home/zijiejiang/pilot_dataset/osaka/iv_0/raw'
+topic: '/sensing/camera/camera0/image_rect_color/compressed'
+is_BGR: False
